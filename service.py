@@ -36,7 +36,7 @@ from util.threads import create_runner
 from util.structable import pack_into_base64_string, unpack_from_base64_string
 
 log = logging.getLogger()
-EXCEPTION_DELAY=1
+EXCEPTION_DELAY=.1
 
 
 class Service:
