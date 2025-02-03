@@ -36,6 +36,7 @@ from util.threads import create_runner
 from util.structable import pack_into_base64_string, unpack_from_base64_string
 
 log = logging.getLogger()
+EXCEPTION_DELAY=1
 
 
 class Service:
@@ -81,7 +82,7 @@ class Service:
             target=self.run,
             flag=attrgetter("_run_flag"),
             delay=0,
-            exception_delay=5,
+            exception_delay=EXCEPTION_DELAY,
             start=True,
         )
 
@@ -187,7 +188,12 @@ class Service:
             )
 
         while self._run_flag:
-            self._read_homekey()
+            try:
+                self._read_homekey()
+            except Exception as e:
+                log.error(f'Something bad happened, waiting {EXCEPTION_DELAY} second(s)...')
+                log.exception(e)
+                time.sleep(EXCEPTION_DELAY)
 
     def get_reader_key(self, request: ReaderKeyRequest) -> ReaderKeyResponse:
         response = ReaderKeyResponse(
