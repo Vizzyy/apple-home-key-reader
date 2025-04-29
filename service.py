@@ -2,6 +2,7 @@ import base64
 import logging
 import time
 import os
+import requests
 from operator import attrgetter
 
 from entity import (
@@ -132,6 +133,13 @@ class Service:
             log.info(
                 f"Found non-ISODEP Tag with UID: {target.identifier.hex().upper()}"
             )
+            if (target.identifier.hex().upper() == '0DFD2F02'):
+                r = requests.post(
+                    'http://home.lan:8123/api/services/light/toggle',
+                    headers={'Authorization': 'Bearer ', 'Content-Type': 'application/json'},
+                    json={'entity_id': 'light.3f_hallway'}
+                )
+                print('OK' if r.ok else f'Error {r.status_code}: {r.text}')
             while self.clf.sense(RemoteTarget("106A")) is not None:
                 log.info("Waiting for target to leave the field...")
                 time.sleep(0.5)
