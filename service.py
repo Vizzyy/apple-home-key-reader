@@ -2,6 +2,7 @@ import base64
 import logging
 import time
 import os
+import requests
 from operator import attrgetter
 
 from entity import (
@@ -34,6 +35,7 @@ from util.ecp import ECP
 from util.iso7816 import ISO7816Tag
 from util.threads import create_runner
 from util.structable import pack_into_base64_string, unpack_from_base64_string
+from config import *
 
 log = logging.getLogger()
 EXCEPTION_DELAY=.1
@@ -129,9 +131,22 @@ class Service:
             return
 
         if not isinstance(target, ISODEPTag):
+            tag_uid = target.identifier.hex().upper()
             log.info(
-                f"Found non-ISODEP Tag with UID: {target.identifier.hex().upper()}"
+                f"Found non-ISODEP Tag with UID: {tag_uid}"
             )
+            if (tag_uid in HA_KEYCARD_ALLOWLIST):
+                r = requests.post(
+                    f'{HA_BASE_URL}{HA_TARGET_ENDPOINT}',
+                    headers={'Authorization': f'Bearer {HA_AUTH_TOKEN}', 'Content-Type': 'application/json'},
+                    json={'entity_id': f'{HA_TARGET_ENTITY}'}
+                )
+                log.info(f'Successful call to {HA_BASE_URL}{HA_TARGET_ENDPOINT} for entity: {HA_TARGET_ENTITY}!' if r.ok else f'Error {r.status_code}: {r.text}')
+            else:
+                log.info('Non-approved keycard denied!')
+
+            time.sleep(1)
+
             while self.clf.sense(RemoteTarget("106A")) is not None:
                 log.info("Waiting for target to leave the field...")
                 time.sleep(0.5)

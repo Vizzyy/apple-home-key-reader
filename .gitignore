@@ -31,3 +31,4 @@ hap.state
 # Tox
 .tox
 
+config.py
